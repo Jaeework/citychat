@@ -13,7 +13,7 @@ import { useCityStore } from "../stores/useCitystore";
 // ─────── 페이지 목록 ───────
 const pages = [
   { name: "Home", path: "/" },
-  { name: "Cities", path: "/cities" },
+  { name: "Cities", path: "#" },
   { name: "Landmark", path: "/" },
   { name: "About", path: "/" },
 ];
