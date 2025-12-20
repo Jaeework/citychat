@@ -342,25 +342,51 @@ function Header() {
                 </li>
               )
             )}
-            <li className={styles.drawerListItem}>
-              <Link
-                href="/signin"
-                onClick={toggleDrawer(false)}
-                className={styles.drawerLink}
-              >
-                {isLoggedIn && user?.nickname ? (
-                  <Avatar name={user.nickname} />
-                ) : (
-                  <Image
-                    src="/assets/login-profile.png"
-                    alt="마이페이지"
-                    width={24}
-                    height={24}
-                    className={styles.drawerIcon}
-                  />
-                )}
-              </Link>
-            </li>
+            {isLoggedIn ? (
+              <>
+                <li className={styles.drawerItem}>
+                  <Link
+                    href="/me"
+                    onClick={toggleDrawer(false)}
+                    className={styles.drawerLink}
+                  >
+                    {isLoggedIn && user?.nickname ? (
+                      <Avatar name={user.nickname} />
+                    ) : (
+                      <Image
+                        src="/assets/login-profile.png"
+                        alt="마이페이지"
+                        width={24}
+                        height={24}
+                        className={styles.drawerIcon} />
+                    )}
+                  </Link>
+                </li>
+                <li className={styles.drawerListItem}>
+                  <Link
+                    href="#"
+                    className={styles.drawerLink}
+                    onClick={() => {
+                      handleLogout();
+                      toggleMypageDropdown();
+                    }}
+                  >
+                    로그아웃
+                  </Link>
+                </li>
+              </>
+            ) : (
+              <li className={styles.drawerListItem}>
+                <Link
+                  href="/signin"
+                  className={styles.drawerLink}
+                  onClick={toggleDrawer(false)}
+                >
+                  로그인
+                </Link>
+              </li>
+            )
+            }
           </ul>
         </div>
       </div>
