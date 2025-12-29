@@ -5,14 +5,7 @@ import styles from "./subSlider.module.css";
 import Image from "next/image";
 import Link from "next/link";
 import LoadingSpinner from "@/app/components/LoadingSpinner";
-
-
-interface City {
-  id: string;
-  name: string;
-  image: string;
-  description: string;
-}
+import { useGetCities } from "@/app/hooks/useGetCities";
 
 const ITEM_HEIGHT = 35;
 const ITEM_GAP = 10;
@@ -21,29 +14,7 @@ const SLIDE_HEIGHT = ITEM_HEIGHT + ITEM_GAP;
 const SubSlider: React.FC = () => {
   const [activeIndex, setActiveIndex] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [cities, setCities] = useState<City[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  
-
-  useEffect(() => {
-    const fetchCities = async () => {
-      try {
-        const response = await fetch("/api/cities");
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data: City[] = await response.json();
-        setCities(data);
-      } catch (err: unknown) {
-        console.error("도시 데이터를 불러오는 중 오류 발생:", err);
-        setError("도시 데이터를 불러오는 데 실패했습니다.");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchCities();
-  }, []);
+  const { cities, isLoading, error } = useGetCities(); 
 
   // 휠 이벤트로 인덱스 변경
   useEffect(() => {
@@ -97,11 +68,11 @@ const SubSlider: React.FC = () => {
     setActiveIndex(index);
   }, []);
 
-  if (loading) {
+  if (isLoading) {
     return <LoadingSpinner size={15} />;
   }
   if (error) {
-    return <div className={styles.errorState}>오류: {error}</div>;
+    return <div className={styles.errorState}>오류: {error.message}</div>;
   }
   if (cities.length === 0) {
     return <div className={styles.emptyState}>도시를 찾을 수 없습니다.</div>;
