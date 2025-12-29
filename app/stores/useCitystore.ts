@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { devtools, persist } from "zustand/middleware";
 
 type City = {
-  id: string;
+  id: number;
   name: string;
   description: string;
   image?: string;
@@ -10,7 +10,7 @@ type City = {
 
 type CityStore = {
   cities: City[];
-  getCityById: (id: string) => City | undefined;
+  getCityById: (id: number) => City | undefined;
   addCity: (city: City) => void;
   addCities: (cities: City[]) => void;
   clearCities: () => void;
