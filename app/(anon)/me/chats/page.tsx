@@ -7,7 +7,7 @@ import React, { useEffect, useState, useRef } from "react";
 import LoadingSpinner from "@/app/components/LoadingSpinner";
 import EmptyChatList from "./components/EmptyChatList";
 import { useRouter } from "next/navigation";
-import { useCityStore } from "@/app/stores/useCitystore";
+import { useCityStore } from "@/app/stores/useCityStore";
 
 const {
   ["page-container"]: pageContainer,

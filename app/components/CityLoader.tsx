@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { useCityStore } from "../stores/useCitystore";
+import { useCityStore } from "../stores/useCityStore";
 import { SbCityRepository } from "@/backend/infrastructure/repositories/SbCityRepository";
 import { GetCityListUseCase } from "@/backend/application/cities/usecases/GetCityListUseCase";
 

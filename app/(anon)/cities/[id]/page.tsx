@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import TopTagList from "@/app/components/TopTagList";
 import CityLoader from "@/app/components/CityLoader";
 import SharedPageLayout from "@/app/SharedPageLayout";
-import { useCityStore } from "@/app/stores/useCitystore";
+import { useCityStore } from "@/app/stores/useCityStore";
 import TourCard from "@/app/(anon)/cities/[id]/components/TourCard";
 import ChatButton from "@/app/(anon)/cities/[id]/components/ChatButton";
 import CategoryFilter from "@/app/(anon)/cities/[id]/components/CategoryFilter";
