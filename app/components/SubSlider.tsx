@@ -7,14 +7,29 @@ import Link from "next/link";
 import LoadingSpinner from "@/app/components/LoadingSpinner";
 import { useGetCities } from "@/app/hooks/useGetCities";
 
-const ITEM_HEIGHT = 35;
-const ITEM_GAP = 10;
-const SLIDE_HEIGHT = ITEM_HEIGHT + ITEM_GAP;
+const ITEM_HEIGHT = 45;
+const MOBILE_BREAKPOINT = 768;
+const SWIPE_THRESHOLD = 50;
 
 const SubSlider: React.FC = () => {
   const [activeIndex, setActiveIndex] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const touchStartX = useRef(0);
+  const touchStartY = useRef(0);
   const { cities, isLoading, error } = useGetCities(); 
+
+  // 모바일 감지
+  useEffect(() => {
+    const checkMobile = () => {
+      const mobile = window.innerWidth < MOBILE_BREAKPOINT;
+      setIsMobile(mobile);
+    };
+
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   // 휠 이벤트로 인덱스 변경
   useEffect(() => {
@@ -64,6 +79,44 @@ const SubSlider: React.FC = () => {
     };
   }, [activeIndex, cities]);
 
+  // 터치 이벤트로 인덱스 변경 (모바일)
+  useEffect(() => {
+    const container = scrollRef.current;
+    if (!container || cities.length === 0) return;
+
+    const handleTouchStart = (e: TouchEvent) => {
+      touchStartX.current = e.touches[0].clientX;
+      touchStartY.current = e.touches[0].clientY;
+    };
+
+    const handleTouchEnd = (e: TouchEvent) => {
+      const touchEndX = e.changedTouches[0].clientX;
+      const touchEndY = e.changedTouches[0].clientY;
+
+      const deltaX = touchStartX.current - touchEndX;
+      const deltaY = touchStartY.current - touchEndY;
+
+      if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > SWIPE_THRESHOLD) {
+        if (deltaX > 0 && activeIndex < cities.length - 1) {
+          // 왼쪽으로 스와이프 (다음)
+          setActiveIndex(activeIndex + 1);
+        } else if (deltaX < 0 && activeIndex > 0) {
+          // 오른쪽으로 스와이프 (이전)
+          setActiveIndex(activeIndex - 1);
+        }
+      }
+    };
+
+    container.addEventListener("touchstart", handleTouchStart, { passive: true });
+    container.addEventListener("touchend", handleTouchEnd, { passive: true });
+
+    return () => {
+      container.removeEventListener("touchstart", handleTouchStart);
+      container.removeEventListener("touchend", handleTouchEnd);
+    };
+
+  }, [activeIndex, cities]);
+
   const handleNavClick = useCallback((index: number) => {
     setActiveIndex(index);
   }, []);
@@ -81,45 +134,48 @@ const SubSlider: React.FC = () => {
   const currentCity = cities[activeIndex];
 
   return (
-    <div className={styles.appContainer}>
-      <div className={styles.mainContentArea}>
-        <div className={styles.verticalNavContainer}>
-          <div className={styles.scrollSnapContainer}>
-            <div
-              ref={scrollRef}
-              className={styles.scrollInner}
-              style={{
-                transform: `translateY(-${activeIndex * SLIDE_HEIGHT}px)`,
-                transition: "transform 0.3s ease",
-              }}
-            >
-              {cities.map((city, index) => (
-                <div
-                  key={city.id || city.name}
-                  className={`${styles.cityNavItem} ${index === activeIndex ? styles.active : ""}`}
-                  onClick={() => handleNavClick(index)}
-                >
-                  {city.name}
-                </div>
-              ))}
-            </div>
+    <div className={styles.container}>
+      <div className={styles.contentWrapper}>
+        {/* 도시 네비게이션 */}
+        <div className={styles.cityNav}>
+          <div
+            ref={scrollRef}
+            className={styles.cityNavInner}
+            style={{
+              transform: isMobile
+                ? `translateX(-${activeIndex * ITEM_HEIGHT}px)`
+                : `translateY(-${activeIndex * ITEM_HEIGHT}px)`,
+            }}
+          >
+            {cities.map((city, index) => (
+              <div
+                key={city.id || city.name}
+                data-index={index}
+                className={`${styles.cityNavItem} ${index === activeIndex ? styles.active : ""}`}
+                onClick={() => handleNavClick(index)}
+              >
+                {city.name}
+              </div>
+            ))}
           </div>
         </div>
-        <div className={styles.welcomeSection}>
-          <div className={styles.contentCard}>
-            <div className={styles.imageWrapper}>
-              {currentCity?.image && (
+        {/* 도시 정보 섹션 */}
+        <div className={styles.cityDetail}>
+          <div className={styles.detailCard}>
+            {currentCity?.image && (
+              <div className={styles.imageWrapper}>
                 <Image
                   src={currentCity.image}
                   alt={currentCity.name}
                   width={250}
                   height={320}
+                  className={styles.cityImage}
                   priority
-                  unoptimized
+                  // unoptimized
                 />
-              )}
-            </div>
-            <div className={styles.cardTextContainer}>
+              </div>
+            )}
+            <div className={styles.textContainer}>
               <h1>{currentCity.name}에 오신 것을 환영합니다!</h1>
               <p>{currentCity.description}</p>
               <Link href={`/cities/${currentCity.id}`} className={styles.exploreButton}>

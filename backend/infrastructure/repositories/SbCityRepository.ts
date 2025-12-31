@@ -61,7 +61,8 @@ export class SbCityRepository implements CityRepository {
           storage_path,
           public_url
         )
-      `);
+      `)
+      .order("id", { ascending: true });
 
     if (error) throw new Error(error.message);
     if (!data) return [];
