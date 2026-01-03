@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
   const serviceKey = encodeURIComponent(process.env.TOUR_API_KEY || "");
   // 가장 최신의 정보 : 지난 달(이번 달은 정보 업데이트 전)
   const now = new Date();
-  now.setMonth(now.getMonth() - 1);
+  now.setMonth(now.getMonth() - 2);
   const baseYm =
     now.getFullYear().toString() + String(now.getMonth() + 1).padStart(2, "0");
   // 3개의 시군구를 병렬 fetch
