@@ -3,9 +3,8 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import TopTagList from "@/app/components/TopTagList";
-import CityLoader from "@/app/components/CityLoader";
 import SharedPageLayout from "@/app/SharedPageLayout";
-import { useCityStore } from "@/app/stores/useCitystore";
+import { useCityStore } from "@/app/stores/useCityStore";
 import TourCard from "@/app/(anon)/cities/[id]/components/TourCard";
 import ChatButton from "@/app/(anon)/cities/[id]/components/ChatButton";
 import CategoryFilter from "@/app/(anon)/cities/[id]/components/CategoryFilter";
@@ -18,20 +17,13 @@ interface TourItem {
   rlteSignguNm: string;
 }
 
-interface City {
-  id: string;
-  name: string;
-  description: string;
-  image?: string;
-}
-
 export default function DetailPage() {
   const [hasMounted, setHasMounted] = useState(false);
   const params = useParams();
-  const cityId = params.id as string;
+  const cityId = Number(params.id);
 
   const getCityById = useCityStore((state) => state.getCityById);
-  const currentCity: City | undefined = getCityById(cityId);
+  const currentCity = getCityById(cityId);
 
   const [tourList, setTourList] = useState<TourItem[] | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
@@ -68,11 +60,8 @@ export default function DetailPage() {
 
   if (!hasMounted) return null;
 
-  const shouldLoadCity = !currentCity;
-
   return (
     <>
-      {shouldLoadCity && <CityLoader />}
       {currentCity ? (
         <SharedPageLayout title={currentCity.name} imgUrl={currentCity.image}>
           <div

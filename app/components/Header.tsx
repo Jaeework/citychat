@@ -5,16 +5,16 @@ import Image from "next/image";
 import Link from "next/link";
 import styles from "./header.module.css";
 import Avatar from "./Avatar";
-import { useEffect } from "react";
 import { useUserStore } from "@/app/stores/useUserStore";
 import { useSignout } from "@/app/hooks/useSignout";
-import { useCityStore } from "../stores/useCitystore";
+import { useGetCities } from "@/app/hooks/useGetCities";
+import { MenuIcon, XIcon } from "lucide-react";
 
 // ─────── 페이지 목록 ───────
 const pages = [
   { name: "Home", path: "/" },
   { name: "Cities", path: "#" },
-  { name: "Landmark", path: "/" },
+  // { name: "Landmark", path: "/" },
   { name: "About", path: "/" },
 ];
 //  ─────── Cities의 드롭다운 항목 ───────
@@ -39,23 +39,7 @@ function Header() {
   // Zustand 스토어에서 상태와 액션
   const user = useUserStore((state) => state.user); // 유저 정보 데이터
   const { mutate: signout } = useSignout();
-  const addCities = useCityStore((state) => state.addCities); //도시 정보 데이터
-
-  // Supabase 정보 스토어 저장
-  useEffect(() => {
-    const fetchCities = async () => {
-      try {
-        const response = await fetch("/api/cities");
-        const data = await response.json();
-        addCities(data);
-      } catch (error) {
-        const errormessage =
-          error instanceof Error ? error.message : "데이터를 불러오지 못했습니다.";
-        console.log(errormessage);
-      }
-    };
-    fetchCities();
-  }, [addCities]);
+  useGetCities(); // 도시 정보 데이터
 
   // 로그인 여부 확인
   const isLoggedIn = !!user;
@@ -157,7 +141,7 @@ function Header() {
               aria-label="메뉴 열기"
               onClick={toggleDrawer(true)}
             >
-              ☰
+              <MenuIcon />
             </button>
           </div>
 
@@ -284,7 +268,7 @@ function Header() {
               aria-label="메뉴 닫기"
               onClick={toggleDrawer(false)}
             >
-              ✕
+              <XIcon />
             </button>
           </div>
 
