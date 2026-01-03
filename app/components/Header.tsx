@@ -8,12 +8,13 @@ import Avatar from "./Avatar";
 import { useUserStore } from "@/app/stores/useUserStore";
 import { useSignout } from "@/app/hooks/useSignout";
 import { useGetCities } from "@/app/hooks/useGetCities";
+import { MenuIcon, XIcon } from "lucide-react";
 
 // ─────── 페이지 목록 ───────
 const pages = [
   { name: "Home", path: "/" },
   { name: "Cities", path: "#" },
-  { name: "Landmark", path: "/" },
+  // { name: "Landmark", path: "/" },
   { name: "About", path: "/" },
 ];
 //  ─────── Cities의 드롭다운 항목 ───────
@@ -140,7 +141,7 @@ function Header() {
               aria-label="메뉴 열기"
               onClick={toggleDrawer(true)}
             >
-              ☰
+              <MenuIcon />
             </button>
           </div>
 
@@ -267,7 +268,7 @@ function Header() {
               aria-label="메뉴 닫기"
               onClick={toggleDrawer(false)}
             >
-              ✕
+              <XIcon />
             </button>
           </div>
 
