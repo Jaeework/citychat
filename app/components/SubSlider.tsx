@@ -1,35 +1,37 @@
 "use client";
 
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import styles from "./subSlider.module.css";
 import Image from "next/image";
 import Link from "next/link";
 import LoadingSpinner from "@/app/components/LoadingSpinner";
 import { useGetCities } from "@/app/hooks/useGetCities";
 
-const ITEM_HEIGHT = 45;
-const MOBILE_BREAKPOINT = 768;
 const SWIPE_THRESHOLD = 50;
 
 const SubSlider: React.FC = () => {
   const [activeIndex, setActiveIndex] = useState(0);
-  const [isMobile, setIsMobile] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const touchStartX = useRef(0);
   const touchStartY = useRef(0);
   const { cities, isLoading, error } = useGetCities(); 
 
-  // 모바일 감지
   useEffect(() => {
-    const checkMobile = () => {
-      const mobile = window.innerWidth < MOBILE_BREAKPOINT;
-      setIsMobile(mobile);
-    };
+    const container = scrollRef.current;
+    if (!container) return;
+    
+    const targetItem = container.querySelector(
+      `[data-index="${activeIndex}"]`
+    ) as HTMLElement;
 
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
+    if (targetItem) {
+      targetItem.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+        inline: "center",
+      });
+    }
+  }, [activeIndex]);
 
   // 휠 이벤트로 인덱스 변경
   useEffect(() => {
@@ -117,9 +119,9 @@ const SubSlider: React.FC = () => {
 
   }, [activeIndex, cities]);
 
-  const handleNavClick = useCallback((index: number) => {
+  const handleNavClick = (index: number) => {
     setActiveIndex(index);
-  }, []);
+  };
 
   if (isLoading) {
     return <LoadingSpinner size={15} />;
@@ -141,11 +143,6 @@ const SubSlider: React.FC = () => {
           <div
             ref={scrollRef}
             className={styles.cityNavInner}
-            style={{
-              transform: isMobile
-                ? `translateX(-${activeIndex * ITEM_HEIGHT}px)`
-                : `translateY(-${activeIndex * ITEM_HEIGHT}px)`,
-            }}
           >
             {cities.map((city, index) => (
               <div
@@ -190,4 +187,3 @@ const SubSlider: React.FC = () => {
 };
 
 export default SubSlider;
-
