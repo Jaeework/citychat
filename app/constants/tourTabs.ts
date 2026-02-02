@@ -1,3 +1,5 @@
+import { Bed, Binoculars, Dog, Landmark, type LucideIcon, ShoppingBag, Utensils } from "lucide-react";
+
 export const TOUR_TABS = {
   TOUR: "tour",
   FOOD: "food",
@@ -13,37 +15,37 @@ export type TourTab = typeof TOUR_TABS[keyof typeof TOUR_TABS];
 export const TOUR_TAB_CONFIG: Record<TourTab, {
   label: string;
   contentTypeId?: number;
-  emoji?: string;
+  icon: LucideIcon;
 }> = {
   [TOUR_TABS.TOUR]: {
     label: "관광",
     contentTypeId: 12,
-    emoji: "🏛️",
+    icon: Binoculars,
   },
   [TOUR_TABS.FOOD]: {
     label: "맛집",
     contentTypeId: 39,
-    emoji: "🍽️",
+    icon: Utensils,
   },
   [TOUR_TABS.ACCOMMODATION]: {
     label: "숙소",
     contentTypeId: 32,
-    emoji: "🏨",
+    icon: Bed,
   },
   [TOUR_TABS.CULTURE]: {
     label: "문화생활",
     contentTypeId: 14,
-    emoji: "🎭",
+    icon: Landmark,
   },
   [TOUR_TABS.SHOPPING]: {
     label: "쇼핑",
     contentTypeId: 38,
-    emoji: "🛍️",
+    icon: ShoppingBag,
   },
   [TOUR_TABS.PET]: {
-    label: "반려견",
+    label: "반려동물",
     contentTypeId: undefined,  // Pet API는 contentTypeId 없음
-    emoji: "🐕",
+    icon: Dog,
   },
 };
 
