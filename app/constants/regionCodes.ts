@@ -586,7 +586,7 @@ export const regionCodeMap: RegionCode[] = [
   },
   {
     "id": 39,
-    "dbCityId": 4,
+    "dbCityId": 5,
     "nameKo": "제주특별자치도",
     "nameEn": "Jeju-do",
     "displayNameKo": "제주",
