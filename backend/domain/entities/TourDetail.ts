@@ -4,6 +4,7 @@ export interface TourDetail {
   homepage?: string;
   overview: string;
   tel: string;
+  telName: string;
   firstImage?: string;
   addr1: string;
   restDate?: string;  // 휴무일

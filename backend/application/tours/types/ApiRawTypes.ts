@@ -67,3 +67,15 @@ export interface PetItem {
 }
 
 export type TourItemType = KorItem | PetItem;
+
+export interface TourDetailRaw {
+  contentid: string;
+  title: string;
+  homepage?: string;
+  overview: string;
+  tel: string;
+  telname: string;
+  firstimage?: string;
+  addr1: string;
+  restdate?: string;
+}

@@ -1,7 +1,7 @@
 import { TourRepository } from "@/backend/domain/repositories/TourRepository";
 import { TourListItem } from "@/backend/domain/entities/TourListItem";
 import { VisitKoreaApiClient } from "@/backend/infrastructure/external-clients/VisitKoreaApiClient";
-import { TourApiResponse, TourItemType } from "@/backend/application/tours/types/ApiRawTypes";
+import { TourApiResponse, TourDetailRaw, TourItemType } from "@/backend/application/tours/types/ApiRawTypes";
 import { TourDetail } from "@/backend/domain/entities/TourDetail";
 
 const VK_ENDPOINTS = {
@@ -60,34 +60,73 @@ export class VkTourRepository implements TourRepository {
         requestParams
       );
 
-      return this.extractData(response);
+      const { totalCount, items: rawItems } = this.extractData(response);
+
+      return {
+        totalCount,
+        items: rawItems.map((item) => this.mapToTourListItem(item)),
+      };
     } catch (error) {
       console.error("Failed to fetch tour list:", error);
       throw new Error("관광 정보를 불러오는데 실패했습니다.");
     }
   }
   
-  getByContentId(params: { contentId: string; contentTypeId?: number; }): Promise<TourDetail> {
-    throw new Error("Method not implemented.");
+  async getByContentId(params: { contentId: string; contentTypeId?: number; }): Promise<TourDetail> {
+    const { contentId, contentTypeId } = params;
+    const isPetService = contentTypeId === undefined;
+
+    const endpoint = isPetService
+      ? VK_ENDPOINTS.PET_SERVICE.DETAIL_COMMON
+      : VK_ENDPOINTS.KOR_SERVICE.DETAIL_COMMON;
+
+    const requestParams: Record<string, string> = {
+      serviceKey: process.env.TOUR_API_KEY!,
+      MobileOS: "ETC",
+      MobileApp: "CityChat",
+      _type: "json",
+      contentId,
+    };
+
+    try {
+      const response = await this.apiClient.get<TourApiResponse<TourDetailRaw>>(
+        endpoint,
+        requestParams
+      );
+
+      const { items } = this.extractData(response);
+
+      if (items.length === 0 ) {
+        throw new Error("Tour detail not found");
+      }
+
+      return this.mapToTourDetail(items[0]);
+    } catch (error) {
+      console.error("Failed to fetch tour detail:", error);
+      throw new Error("관광 상세 정보를 불러오는데 실패했습니다.");
+    }
   }
 
-  private extractData(
-    response: TourApiResponse<TourItemType>
-  ): { totalCount: number; items: TourListItem[] } {
-
+  private extractData<T>(
+    response: TourApiResponse<T>
+  ): { totalCount: number; items: T[] } {
     if (response.response.header.resultCode !== "0000") {
       console.warn("API failed:", response.response.header.resultMsg);
       return { totalCount: 0, items: [] };
     }
 
-    const rawItems = this.normalizeItems(response.response.body.items?.item);
-    const items = rawItems.map((item) => this.mapToTourListItem(item));
+    const items = this.normalizeItems(response.response.body.items?.item);
 
     return {
-      totalCount: response.response.body.totalCount,
+      totalCount: response.response.body.totalCount ?? 0,
       items,
     };
   }
+  private extractHref = (html?: string | null): string | undefined => {
+    if (!html) return;
+    const match = html.match(/href="([^"]+)"/i);
+    return match?.[1];
+  };
 
   private normalizeItems<T>(raw: T | T[] | undefined): T[] {
     if (!raw) return [];
@@ -107,6 +146,20 @@ export class VkTourRepository implements TourRepository {
       mapy: item.mapy,
       tel: item.tel,
       cat1: item.cat1,
+    };
+  }
+
+  private mapToTourDetail(item: TourDetailRaw): TourDetail {
+    return {
+      contentid: item.contentid,
+      title: item.title,
+      homepage: this.extractHref(item.homepage),
+      overview: item.overview,
+      tel: item.tel,
+      telName: item.telname,
+      firstImage: item.firstimage,
+      addr1: item.addr1,
+      restDate: item.restdate,
     };
   }
 }
