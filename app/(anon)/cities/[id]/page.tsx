@@ -1,21 +1,23 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import TopTagList from "@/app/components/TopTagList";
 import SharedPageLayout from "@/app/SharedPageLayout";
 import { useCityStore } from "@/app/stores/useCityStore";
 import TourCard from "@/app/(anon)/cities/[id]/components/TourCard";
 import ChatButton from "@/app/(anon)/cities/[id]/components/ChatButton";
-import CategoryFilter from "@/app/(anon)/cities/[id]/components/CategoryFilter";
 import LoadingSpinner from "@/app/components/LoadingSpinner";
-
-interface TourItem {
-  rlteCtgrySclsNm: string;
-  rlteTatsNm: string;
-  areaNm: string;
-  rlteSignguNm: string;
-}
+import { useGetCurrentCityTours } from "@/app/hooks/useGetCurrentCityTours";
+import { SigunguDropdown } from "./components/SigunguDropdown";
+import { TourListItem } from "@/backend/domain/entities/TourListItem";
+import { 
+  TOUR_TABS, 
+  TourTab, 
+  TOUR_TAB_CONFIG, 
+  ALL_TOUR_TABS 
+} from "@/app/constants/tourTabs";
+import styles from "./page.module.css";
 
 export default function DetailPage() {
   const [hasMounted, setHasMounted] = useState(false);
@@ -25,144 +27,120 @@ export default function DetailPage() {
   const getCityById = useCityStore((state) => state.getCityById);
   const currentCity = getCityById(cityId);
 
-  const [tourList, setTourList] = useState<TourItem[] | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState<string>("All");
+  const [activeTab, setActiveTab] = useState<TourTab>(TOUR_TABS.TOUR);
+  const [sigunguCode, setSigunguCode] = useState<string>();
 
+  const {
+    data,
+    fetchNextPage,
+    isFetching,
+    isFetchingNextPage,
+    hasNextPage,
+  } = useGetCurrentCityTours(String(cityId), activeTab, sigunguCode);
+
+  const tourList: TourListItem[] = data?.items ?? [];
   useEffect(() => {
     setHasMounted(true);
   }, []);
 
-  useEffect(() => {
-    const fetchTourData = async () => {
-      try {
-        const res = await fetch(`/api/tour?id=${cityId}`);
-        const data: TourItem[] = await res.json();
-        setTourList(data);
-      } catch (err) {
-        console.error("관광 정보 로딩 실패:", err);
-      }
-    };
-    fetchTourData();
-  }, [cityId]);
-
-  const categories = useMemo(() => {
-    if (!tourList) return [];
-    const unique = new Set(tourList.map((item) => item.rlteCtgrySclsNm));
-    return ["All", ...Array.from(unique)];
-  }, [tourList]);
-
-  const filteredTourList = useMemo(() => {
-    if (selectedCategory === "All") return tourList;
-    return tourList?.filter(
-      (item) => item.rlteCtgrySclsNm === selectedCategory
+  if (!hasMounted) {
+    return (
+      <SharedPageLayout title="로딩 중..." imgUrl="">
+        <div className={styles.loadingContainer}>
+          <LoadingSpinner size={10} />
+        </div>
+      </SharedPageLayout>
     );
-  }, [tourList, selectedCategory]);
-
-  if (!hasMounted) return null;
+  }
 
   return (
-    <>
+    <SharedPageLayout title={currentCity?.name || ""} imgUrl={currentCity?.image}>
       {currentCity ? (
-        <SharedPageLayout title={currentCity.name} imgUrl={currentCity.image}>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              maxWidth: "900px",
-              color: "#333",
-            }}
-          >
-            <section
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                maxWidth: "fit-content",
-                alignSelf: "center",
-              }}
-            >
-              <header
-                style={{
-                  display: "flex",
-                }}
-              >
-                <p
-                  style={{
-                    marginBottom: "10px",
-                    display: "inline-block",
-                    fontSize: "16px",
-                    color: "#a6a6a6",
-                    marginRight: "2vw",
-                  }}
-                >
-                  {currentCity.description}
-                </p>
+        <div className={styles.container}>
+          <section className={styles.section}>
+            <header className={styles.header}>
+              <div className={styles.chatButton}>
                 <ChatButton cityId={cityId} />
-              </header>
+              </div>
+              <div className={styles.description}>
+                {currentCity.description}
+              </div>
+            </header>
+            <div className={styles.mainContainer}>
+              {/* 인기 태그 목록 */}
+              <div className={styles.tagsWrapper}>
+                <TopTagList roomId={cityId} />
+              </div>
 
-              {/* 인기 태그 */}
-              <div
-                style={{
-                  display: "flex",
-                  gap: "20px",
-                  marginTop: "28px",
-                  justifyContent: "space-between",
-                  alignItems: "",
-                }}
-              >
-                <div style={{ height: "20%" }}>
-                  <TopTagList roomId={Number(cityId)} />
+              {/* 메인 콘텐츠: 투어 리스트 */}
+              <div className={styles.mainContent}>
+                {/* 탭 + 시군구 필터 */}
+                <div className={styles.filterContainer}>
+                  <div className={styles.tabsWrapper}>
+                    {ALL_TOUR_TABS.map((tab) => {
+                      const config = TOUR_TAB_CONFIG[tab];
+                      return (
+                        <button
+                          key={tab}
+                          className={`${styles.tabButton} ${activeTab === tab} ? ${styles.active} : ""}`}
+                          onClick={() => setActiveTab(tab)}
+                          disabled={isFetching}
+                        >
+                          <div className={styles.tabText}>
+                            {config.label}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <div className={styles.dropdownWrapper}>
+                    <SigunguDropdown
+                      cityId={String(cityId)}
+                      value={sigunguCode}
+                      onChange={setSigunguCode}
+                      disabled={isFetching}
+                    />
+                  </div>
                 </div>
 
-                {/* 필터 및 카드 */}
-                <div
-                  style={{
-                    flex: 1,
-                    marginLeft: "30px",
-                    marginTop: "5px",
-                  }}
-                >
-                  <CategoryFilter
-                    categories={categories}
-                    selectedCategory={selectedCategory}
-                    onChange={setSelectedCategory}
-                  />
-
-                  <div
-                    style={{
-                      display: "grid",
-                      gap: "16px",
-                      gridTemplateColumns: "repeat(2, 1fr)",
-                      padding: "20px",
-                      height: "40vh",
-                      overflowY: "auto",
-                    }}
-                  >
-                    {filteredTourList && filteredTourList.length > 0 ? (
-                      filteredTourList.map((item, idx) => (
-                        <TourCard
-                          key={idx}
-                          rlteTatsNm={item.rlteTatsNm}
-                          areaNm={item.areaNm}
-                          rlteSignguNm={item.rlteSignguNm}
-                          rlteCtgrySclsNm={item.rlteCtgrySclsNm}
-                        />
-                      ))
+                {/* 투어 리스트 */}
+                <div className={styles.toursWrapper}>
+                  <div className={styles.toursGrid}>
+                    {isFetching && tourList.length === 0 ? (
+                      <div className={styles.loadingContainer}>
+                        <LoadingSpinner size={15} />
+                      </div>
+                    ) : tourList.length === 0 ? (
+                      <div className={styles.emptyState}>
+                        <p>해당 카테고리에 데이터가 없습니다.</p>
+                      </div>
                     ) : (
-                      <LoadingSpinner size={15} />
+                      <>
+                        {tourList.map((item) => (
+                          <TourCard key={item.contentid} item={item} />
+                        ))}
+                        {hasNextPage && (
+                          <div className={styles.loadMoreContainer}>
+                            <button
+                              className="btn btn-primary"
+                              onClick={() => fetchNextPage()}
+                              disabled={isFetchingNextPage}
+                            >
+                              {isFetchingNextPage ? "로딩 중..." : "더 보기"}
+                            </button>
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>
               </div>
-            </section>
-          </div>
-        </SharedPageLayout>
-      ) : (
-        <div style={{ padding: "20px", textAlign: "center" }}>
-          도시 정보를 불러오는 중입니다...
+            </div>
+          </section>
         </div>
+      ) : (
+        <LoadingSpinner size={15} />
       )}
-    </>
+    </SharedPageLayout>
   );
 }
-
