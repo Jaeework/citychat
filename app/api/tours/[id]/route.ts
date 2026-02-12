@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 const useCase = new GetTourDetailUseCase(new VkTourRepository(new VisitKoreaApiClient()));
 
-export async function GET(request: NextRequest, { params }: {params: {id: string}}) {
+export async function GET(request: NextRequest, { params }: {params: Promise<{id: string}>}) {
   const { id } = await params;
   const { searchParams } = new URL(request.url);
   const tab = searchParams.get("tab") ?? "tour";
